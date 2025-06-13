@@ -10,7 +10,8 @@ export class AppController {
     createdBy: string,
     webSite: string,
     linkedIn: string,
-    version: string
+    version: string,
+    githubUrl: string
   } {
     return this.appService.getHello();
   }
