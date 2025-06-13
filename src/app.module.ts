@@ -12,6 +12,7 @@ import { UsersModule } from "./users/users.module";
 import { ProjectsModule } from "./projects/projects.module";
 import { CommentsModule } from "./comments/comments.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
 	imports: [
@@ -20,6 +21,12 @@ import { NotificationsModule } from "./notifications/notifications.module";
 			database: "./database.sqlite",
 			entities: [Task, User, Project, Comment, Notification],
 			synchronize: true,
+		}),
+		ConfigModule.forRoot({
+			isGlobal: true,
+			envFilePath: process.env.NODE_ENV
+				? `.env.${process.env.NODE_ENV}`
+				: ".env.local",
 		}),
 		TasksModule,
 		UsersModule,

@@ -1,3 +1,11 @@
+Start:
+server development
+set NODE_ENV=local && npm run start:dev
+
+server production
+set NODE_ENV=production && npm run start:prod
+
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
