@@ -27,11 +27,14 @@ export class User {
 	@Column()
 	password: string;
 
-	@Column({ default: false })
+	@Column({ default: true })
 	is_active: boolean;
 
 	@Column({ default: "created" })
 	status: string;
+
+	@Column({ default: "member" })
+	role: string;
 
 	@Column({ type: "datetime", default: () => "CURRENT_TIMESTAMP" })
 	created_at: Date;
