@@ -25,21 +25,7 @@ export class TasksService {
 	) {}
 
 	async create(createTaskDto: CreateTaskDto) {
-		const dta: Task = {
-			id: Math.floor(Math.random() * 100),
-			title: createTaskDto.title,
-			description: createTaskDto.description,
-			status: "created",
-			created_at: new Date(),
-			updated_at: new Date(),
-			assigned_users: [],
-			deadline: new Date(),
-			comments: [],
-		};
-		// listTaks.push(dta);
-
-		const tsk = this.taskRepository.create(dta);
-
+		const tsk = this.taskRepository.create(createTaskDto);
 		return this.taskRepository.save(tsk);
 	}
 

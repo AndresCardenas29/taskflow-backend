@@ -3,7 +3,6 @@ import {
 	Column,
 	Entity,
 	Generated,
-	JoinTable,
 	ManyToMany,
 	PrimaryGeneratedColumn,
 } from "typeorm";
@@ -24,6 +23,5 @@ export class Project {
 	status: string;
 
 	@ManyToMany(() => User, (user) => user.projects)
-	@JoinTable()
 	assigned_users: User[];
 }

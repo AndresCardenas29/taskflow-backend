@@ -7,9 +7,9 @@ import {
 	PrimaryGeneratedColumn,
 	Column,
 	Generated,
-	ManyToOne,
 	OneToMany,
 	ManyToMany,
+	JoinTable,
 } from "typeorm";
 
 @Entity()
@@ -24,7 +24,7 @@ export class User {
 	@Column({ unique: true })
 	username: string;
 
-	@Column()
+	@Column({ select: false })
 	password: string;
 
 	@Column({ default: true })
@@ -42,10 +42,32 @@ export class User {
 	@Column({ type: "datetime", default: () => "CURRENT_TIMESTAMP" })
 	updated_at: Date;
 
-	@ManyToOne(() => Task, (task) => task.assigned_users)
+	@ManyToMany(() => Task, (task) => task.assigned_users)
+	@JoinTable({
+		name: "task_user",
+		joinColumn: {
+			name: "user_id",
+			referencedColumnName: "id",
+		},
+		inverseJoinColumn: {
+			name: "task_id",
+			referencedColumnName: "id",
+		},
+	})
 	tasks: Task[];
 
-	@ManyToOne(() => Project, (project) => project.assigned_users)
+	@ManyToMany(() => Project, (project) => project.assigned_users)
+	@JoinTable({
+		name: "project_user",
+		joinColumn: {
+			name: "user_id",
+			referencedColumnName: "id",
+		},
+		inverseJoinColumn: {
+			name: "project_id",
+			referencedColumnName: "id",
+		},
+	})
 	projects: Project[];
 
 	@OneToMany(() => Comment, (comment) => comment.user)

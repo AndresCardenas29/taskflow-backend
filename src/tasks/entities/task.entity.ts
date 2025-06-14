@@ -4,7 +4,6 @@ import {
 	Column,
 	Generated,
 	ManyToMany,
-	JoinTable,
 	OneToMany,
 } from "typeorm";
 import { User } from "../../users/entities/user.entity";
@@ -22,7 +21,7 @@ export class Task {
 	@Column({ nullable: true })
 	description: string;
 
-	@Column({ type: "datetime" })
+	@Column({ type: "datetime", nullable: true })
 	deadline: Date;
 
 	@Column({ default: "created" })
@@ -35,7 +34,6 @@ export class Task {
 	updated_at: Date;
 
 	@ManyToMany(() => User, (user) => user.tasks)
-	@JoinTable()
 	assigned_users: User[];
 
 	// relation with comment entity

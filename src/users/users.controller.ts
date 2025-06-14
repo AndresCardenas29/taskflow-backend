@@ -16,11 +16,18 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthGuard } from "src/auth/auth.guard";
 import { JwtData } from "src/auth/auth.service";
+import { Task } from "src/tasks/entities/task.entity";
 
 // tipado del header de la respuesta
 interface ResponseHeader {
 	user?: JwtData;
 }
+
+type responseTask = {
+	message: string;
+	data: Task | Task[] | null;
+	error: string;
+};
 
 @Controller("users")
 export class UsersController {
@@ -44,18 +51,6 @@ export class UsersController {
 		const user = await this.usersService.findOne(req.user.email);
 
 		if (!user) throw new NotFoundException("User not found");
-		user.password = ""; // Remove password from response
-		return user;
-	}
-
-	@UseGuards(AuthGuard)
-	@Get(":email")
-	async findOne(@Param("email") email: string, @Request() req: ResponseHeader) {
-		if (!req.user) throw new UnauthorizedException();
-		if (req.user?.role !== "admin") throw new UnauthorizedException();
-		const user = await this.usersService.findOne(email);
-		if (!user) throw new NotFoundException("User not found");
-		user.password = ""; // Remove password from response
 		return user;
 	}
 
@@ -133,5 +128,59 @@ export class UsersController {
 			data: "",
 			error: "",
 		};
+	}
+
+	// obtener tareas asignadas al usuario
+	@UseGuards(AuthGuard)
+	@Get("tasks")
+	async getTasks(@Request() req: ResponseHeader): Promise<responseTask> {
+		if (!req.user) {
+			throw new UnauthorizedException("Unauthorized to access this resource");
+		}
+
+		const task = await this.usersService.getTasks(req.user?.sub);
+		if (!task) {
+			throw new NotFoundException(
+				`No se encontró el recurso con id ${req.user?.sub}`,
+			);
+		}
+		return {
+			message: "Tareas asignadas al usuario",
+			data: task,
+			error: "",
+		};
+	}
+
+	@UseGuards(AuthGuard)
+	@Get(":email")
+	async findOne(@Param("email") email: string, @Request() req: ResponseHeader) {
+		if (!req.user) throw new UnauthorizedException();
+		if (req.user?.role !== "admin") throw new UnauthorizedException();
+		const user = await this.usersService.findOne(email);
+		if (!user) throw new NotFoundException("User not found");
+		return user;
+	}
+
+	@UseGuards(AuthGuard)
+	@Post("add-task")
+	async addTask(@Body() task: Task, @Request() req: ResponseHeader) {
+		if (!req.user) throw new UnauthorizedException();
+
+		const user = await this.usersService.addTaskToUser(req.user?.sub, task.id);
+
+		return user;
+	}
+
+	@UseGuards(AuthGuard)
+	@Post("remove-task")
+	async removeTask(@Body() task: Task, @Request() req: ResponseHeader) {
+		if (!req.user) throw new UnauthorizedException();
+
+		const user = await this.usersService.removeTaskFromUser(
+			req.user?.sub,
+			task.id,
+		);
+
+		return user;
 	}
 }

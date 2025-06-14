@@ -20,7 +20,7 @@ export class AuthService {
 	) {}
 
 	async signIn(email: string, pass: string): Promise<{ access_token: string }> {
-		const user = await this.usersService.findOne(email);
+		const user = await this.usersService.findOne(email, true);
 
 		if (!user || !user.password) {
 			throw new UnauthorizedException();

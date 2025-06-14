@@ -10,6 +10,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
+import { Task } from "src/tasks/entities/task.entity";
 
 type loginResponse = {
 	username: string;
@@ -27,6 +28,8 @@ export class UsersService {
 	constructor(
 		@InjectRepository(User)
 		private readonly userRepository: Repository<User>,
+		@InjectRepository(User)
+		private readonly taskRepository: Repository<Task>,
 	) {}
 
 	async create(createUserDto: CreateUserDto): Promise<response> {
@@ -89,17 +92,23 @@ export class UsersService {
 	}
 
 	async findAll(): Promise<response> {
+		const users = await this.userRepository.find();
 		return {
 			message: "Find all users",
-			data: await this.userRepository.find(),
+			data: users,
 			error: "",
 		};
 	}
 
-	async findOne(value: string | number): Promise<User | null> {
+	async findOne(
+		value: string | number,
+		showPassword: boolean = false,
+	): Promise<User | null> {
+		// personalizar la consulta para
 		// buscar por email o username
 		const user = await this.userRepository.findOne({
 			where: [{ email: value + "" }, { username: value + "" }],
+			select: showPassword ? ["id", "username", "email", "password"] : [],
 		});
 		return user;
 	}
@@ -177,5 +186,62 @@ export class UsersService {
 		} catch (error) {
 			throw new BadRequestException(error);
 		}
+	}
+
+	async getTasks(id: number): Promise<Task[] | null> {
+		const user = await this.userRepository.findOne({
+			where: { id },
+			relations: ["tasks"],
+		});
+		if (!user) {
+			throw new NotFoundException(`No se encontró el recurso con id ${id}`);
+		}
+		return user.tasks;
+	}
+
+	async addTaskToUser(userId: number, taskId: number) {
+		// find user by id
+		const user = await this.findOneById(userId);
+		if (!user) {
+			throw new NotFoundException(`No se encontró el recurso con id ${userId}`);
+		}
+		// find task by id
+		const task = await this.taskRepository.findOne({
+			where: { id: taskId },
+		});
+		if (!task) {
+			throw new NotFoundException(`No se encontró el recurso con id ${taskId}`);
+		}
+
+		if (!user.tasks) {
+			user.tasks = [];
+		}
+
+		const isAlreadyAssigned = user.tasks.some((t) => t.id === taskId);
+		if (isAlreadyAssigned) {
+			throw new BadRequestException(`El usuario ya tiene el tarea asignada`);
+		}
+		user.tasks.push(task);
+		return await this.userRepository.save(user);
+	}
+
+	async removeTaskFromUser(userId: number, taskId: number) {
+		// find user by id
+		const user = await this.userRepository.findOne({
+			where: { id: userId },
+			relations: ["tasks"],
+		});
+		if (!user) {
+			throw new NotFoundException(`No se encontró el recurso con id ${userId}`);
+		}
+		// find task by id
+		const task = await this.taskRepository.findOne({
+			where: { id: taskId },
+		});
+		if (!task) {
+			throw new NotFoundException(`No se encontró el recurso con id ${taskId}`);
+		}
+		user.tasks = user.tasks.filter((t) => t.id !== taskId);
+		return await this.userRepository.save(user);
 	}
 }
