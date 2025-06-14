@@ -30,9 +30,6 @@ export class User {
 	@Column({ default: true })
 	is_active: boolean;
 
-	@Column({ default: "created" })
-	status: string;
-
 	@Column({ default: "member" })
 	role: string;
 

@@ -1,4 +1,9 @@
-import { Injectable } from "@nestjs/common";
+import {
+	BadRequestException,
+	ConflictException,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -91,19 +96,86 @@ export class UsersService {
 		};
 	}
 
-	async findOne(email: string): Promise<User | null> {
-		const user = await this.userRepository.findOneBy({ email });
+	async findOne(value: string | number): Promise<User | null> {
+		// buscar por email o username
+		const user = await this.userRepository.findOne({
+			where: [{ email: value + "" }, { username: value + "" }],
+		});
 		return user;
 	}
 
-	update(id: number, updateUserDto: UpdateUserDto) {
-		return {
-			id,
-			updateUserDto,
-		};
+	async findOneById(id: number): Promise<User | null> {
+		// buscar por id
+		const user = await this.userRepository.findOneBy({ id });
+		return user;
 	}
 
-	remove(id: number) {
-		return `This action removes a #${id} user`;
+	async update(id: number, updateUserDto: UpdateUserDto) {
+		// find user by id
+		const user = await this.findOneById(id);
+		if (!user) {
+			throw new NotFoundException(`No se encontró el recurso con id ${id}`);
+		}
+
+		// validar si el email ya existe en otro usuario
+		if (updateUserDto.email) {
+			const existingUser = await this.userRepository.findOne({
+				where: { email: updateUserDto.email },
+			});
+			if (existingUser && existingUser.id !== id) {
+				throw new ConflictException(
+					"El correo electrónico ya está registrado en otro usuario.",
+				);
+			}
+		}
+
+		// validar si el username ya existe en otro usuario
+		if (updateUserDto.username) {
+			const existingUser = await this.userRepository.findOne({
+				where: { username: updateUserDto.username },
+			});
+			if (existingUser && existingUser.id !== id) {
+				throw new ConflictException(
+					"El nombre de usuario ya está registrado en otro usuario.",
+				);
+			}
+		}
+
+		try {
+			const updatedUser = await this.userRepository.update(+id, updateUserDto);
+
+			if (updatedUser.affected === 1) {
+				return {
+					message: "Usuario actualizado",
+					data: "",
+					error: "",
+				};
+			}
+			throw new BadRequestException("No se pudo actualizar el recurso");
+		} catch (error) {
+			throw new BadRequestException(error);
+		}
+	}
+
+	async remove(id: number) {
+		// find user by id
+		const user = await this.findOneById(id);
+		if (!user)
+			throw new NotFoundException(`No se encontró el recurso con id ${id}`);
+
+		try {
+			const updatedUser = await this.userRepository.delete(id);
+
+			if (updatedUser.affected === 1) {
+				return {
+					message: "Usuario eliminado",
+					data: "",
+					error: "",
+				};
+			}
+			throw new BadRequestException("No se pudo eliminar el recurso");
+		} catch (error) {
+			throw new BadRequestException(error);
+		}
 	}
 }

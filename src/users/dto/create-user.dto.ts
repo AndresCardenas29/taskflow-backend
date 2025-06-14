@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional } from "class-validator";
+import {
+	IsString,
+	IsNotEmpty,
+	IsEmail,
+	IsOptional,
+	Matches,
+} from "class-validator";
 
 export class CreateUserDto {
 	@IsString()
@@ -8,6 +14,11 @@ export class CreateUserDto {
 
 	@IsString()
 	@IsOptional()
+	@Matches(/^[a-zA-Z0-9]+$/, {
+		// letras sin espacios y numeros
+		message:
+			"El nombre solo puede contener letras sin espacios ni caracteres especiales",
+	})
 	username?: string;
 
 	@IsString()

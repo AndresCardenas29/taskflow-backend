@@ -3,6 +3,15 @@ import { UsersService } from "../users/users.service";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 
+export type JwtData = {
+	sub: number;
+	email: string;
+	username: string;
+	role: string;
+	iat?: number; // timestamp en milisegundos
+	exp?: number; // timestamp en milisegundos
+};
+
 @Injectable()
 export class AuthService {
 	constructor(
@@ -22,7 +31,7 @@ export class AuthService {
 			throw new UnauthorizedException();
 		}
 
-		const payload = {
+		const payload: JwtData = {
 			sub: user.id,
 			email: user.email,
 			username: user.username,
