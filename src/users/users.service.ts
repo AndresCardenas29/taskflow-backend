@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { LoginUserDto } from "./dto/login-user.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
@@ -78,53 +77,6 @@ export class UsersService {
 		} catch (error) {
 			return {
 				message: "User created successfully",
-				data: null,
-				error: error instanceof Error ? error.message : String(error),
-			};
-		}
-	}
-
-	async login(loginUserDto: LoginUserDto): Promise<response> {
-		try {
-			// find user by email
-			const user = await this.userRepository.findOne({
-				where: { email: loginUserDto.email },
-			});
-
-			if (!user) {
-				return {
-					message: "User not found",
-					data: null,
-					error: "User not found",
-				};
-			}
-
-			// check password
-			const isPasswordMatch = await bcrypt.compare(
-				loginUserDto.password,
-				user.password,
-			);
-			if (!isPasswordMatch) {
-				return {
-					message: "Password is incorrect",
-					data: null,
-					error: "Password is incorrect",
-				};
-			}
-
-			return {
-				message: "Login successful",
-				data: {
-					username: user.username,
-					is_active: user.is_active,
-					role: user.role,
-					token: "",
-				},
-				error: "",
-			};
-		} catch (error) {
-			return {
-				message: "Login failed",
 				data: null,
 				error: error instanceof Error ? error.message : String(error),
 			};
