@@ -139,12 +139,16 @@ export class UsersService {
 		};
 	}
 
-	findOne(id: number) {
-		return `This action returns a #${id} user`;
+	async findOne(email: string): Promise<User | null> {
+		const user = await this.userRepository.findOneBy({ email });
+		return user;
 	}
 
 	update(id: number, updateUserDto: UpdateUserDto) {
-		return `This action updates a #${id} user`;
+		return {
+			id,
+			updateUserDto,
+		};
 	}
 
 	remove(id: number) {
