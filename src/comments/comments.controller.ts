@@ -1,34 +1,58 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
+import {
+	Controller,
+	Get,
+	Post,
+	Body,
+	Patch,
+	Param,
+	Delete,
+	UseGuards,
+	Request,
+	UnauthorizedException,
+} from "@nestjs/common";
+import { CommentsService } from "./comments.service";
+import { CreateCommentDto } from "./dto/create-comment.dto";
+import { UpdateCommentDto } from "./dto/update-comment.dto";
+import { AuthGuard } from "src/auth/auth.guard";
+import { JwtData } from "src/auth/auth.service";
 
-@Controller('comments')
+// tipado del header de la respuesta
+interface ResponseHeader {
+	user?: JwtData;
+}
+
+@Controller("comments")
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+	constructor(private readonly commentsService: CommentsService) {}
 
-  @Post()
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(createCommentDto);
-  }
+	@UseGuards(AuthGuard)
+	@Post()
+	create(
+		@Body() createCommentDto: CreateCommentDto,
+		@Request() req: ResponseHeader,
+	) {
+		if (!req.user) throw new UnauthorizedException();
 
-  @Get()
-  findAll() {
-    return this.commentsService.findAll();
-  }
+		return this.commentsService.create(createCommentDto, req.user?.sub);
+	}
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(+id);
-  }
+	@Get()
+	findAll() {
+		return this.commentsService.findAll();
+	}
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(+id, updateCommentDto);
-  }
+	@Get(":id")
+	findOne(@Param("id") id: string) {
+		return this.commentsService.findOne(+id);
+	}
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.commentsService.remove(+id);
-  }
+	@Patch(":id")
+	update(@Param("id") id: string, @Body() updateCommentDto: UpdateCommentDto) {
+		return this.commentsService.update(+id, updateCommentDto);
+	}
+
+	@Delete(":id")
+	remove(@Param("id") id: string) {
+		return this.commentsService.remove(+id);
+	}
 }

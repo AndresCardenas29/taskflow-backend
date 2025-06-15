@@ -4,6 +4,7 @@ import {
 	Column,
 	Entity,
 	Generated,
+	JoinColumn,
 	JoinTable,
 	ManyToMany,
 	OneToOne,
@@ -22,7 +23,8 @@ export class Notification {
 	@Column({ type: "datetime", default: () => "CURRENT_TIMESTAMP" })
 	created_at: Date;
 
-	@OneToOne(() => Comment, (comment) => comment.notification)
+	@OneToOne(() => Comment)
+	@JoinColumn()
 	comment: Comment;
 
 	@ManyToMany(() => User, (user) => user.notifications)

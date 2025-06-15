@@ -6,10 +6,7 @@ import {
 	Column,
 	Generated,
 	ManyToOne,
-	OneToOne,
-	JoinColumn,
 } from "typeorm";
-import { Notification } from "src/notifications/entities/notification.entity";
 
 @Entity()
 export class Comment {
@@ -28,8 +25,4 @@ export class Comment {
 
 	@ManyToOne(() => User, (user) => user.comments)
 	user: User;
-
-	@OneToOne(() => Notification, (notification) => notification.comment)
-	@JoinColumn()
-	notification: Notification;
 }
