@@ -25,9 +25,12 @@ import { AuthModule } from "./auth/auth.module";
 		}),
 		ConfigModule.forRoot({
 			isGlobal: true,
-			envFilePath: process.env.NODE_ENV
-				? `.env.${process.env.NODE_ENV}`
-				: ".env.local",
+			envFilePath: [
+				".env.production",
+				".env.development",
+				".env.local",
+				`.env.${process.env.NODE_ENV}`,
+			],
 		}),
 		TasksModule,
 		UsersModule,
