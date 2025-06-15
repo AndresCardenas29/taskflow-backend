@@ -1,26 +1,60 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { CreateProjectDto } from "./dto/create-project.dto";
+import { UpdateProjectDto } from "./dto/update-project.dto";
+import { Project } from "./entities/project.entity";
+import { Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+
+type responseData = {
+	error: string;
+	msg: string;
+	data: Project | Project[] | null;
+};
 
 @Injectable()
 export class ProjectsService {
-  create(createProjectDto: CreateProjectDto) {
-    return 'This action adds a new project';
-  }
+	constructor(
+		@InjectRepository(Project)
+		private projectRepository: Repository<Project>,
+	) {}
 
-  findAll() {
-    return `This action returns all projects`;
-  }
+	create(createProjectDto: CreateProjectDto) {
+		const project = this.projectRepository.create(createProjectDto);
+		return this.projectRepository.save(project);
+	}
 
-  findOne(id: number) {
-    return `This action returns a #${id} project`;
-  }
+	findAll() {
+		return this.projectRepository.find();
+	}
 
-  update(id: number, updateProjectDto: UpdateProjectDto) {
-    return `This action updates a #${id} project`;
-  }
+	findOne(id: number) {
+		return this.projectRepository.findOneBy({
+			id,
+		});
+	}
 
-  remove(id: number) {
-    return `This action removes a #${id} project`;
-  }
+	async update(id: number, updateProjectDto: UpdateProjectDto) {
+		const project = await this.projectRepository.findOneBy({
+			id,
+		});
+		if (!project) {
+			throw new NotFoundException("Project not found");
+		}
+		const updatedProject = this.projectRepository.merge(
+			project,
+			updateProjectDto,
+		);
+		return this.projectRepository.save(updatedProject);
+	}
+
+	async remove(id: number): Promise<responseData> {
+		const project = await this.projectRepository.findOneBy({
+			id,
+		});
+		if (!project) {
+			throw new NotFoundException("Project not found");
+		}
+		await this.projectRepository.remove(project);
+		return { msg: "Project deleted successfully", data: null, error: "" };
+	}
 }

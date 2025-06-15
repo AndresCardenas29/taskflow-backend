@@ -11,6 +11,7 @@ import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
 import { Task } from "src/tasks/entities/task.entity";
+import { Project } from "src/projects/entities/project.entity";
 
 type loginResponse = {
 	username: string;
@@ -30,6 +31,8 @@ export class UsersService {
 		private readonly userRepository: Repository<User>,
 		@InjectRepository(User)
 		private readonly taskRepository: Repository<Task>,
+		@InjectRepository(User)
+		private readonly projectRepository: Repository<Project>,
 	) {}
 
 	async create(createUserDto: CreateUserDto): Promise<response> {
@@ -242,6 +245,69 @@ export class UsersService {
 			throw new NotFoundException(`No se encontró el recurso con id ${taskId}`);
 		}
 		user.tasks = user.tasks.filter((t) => t.id !== taskId);
+		return await this.userRepository.save(user);
+	}
+
+	// Projects
+
+	async getProjects(id: number): Promise<Project[] | null> {
+		const user = await this.userRepository.findOne({
+			where: { id },
+			relations: ["projects"],
+		});
+		if (!user) {
+			throw new NotFoundException(`No se encontró el recurso con id ${id}`);
+		}
+		return user.projects;
+	}
+
+	async addProjectToUser(userId: number, projectId: number) {
+		// find user by id
+		const user = await this.findOneById(userId);
+		if (!user) {
+			throw new NotFoundException(`No se encontró el recurso con id ${userId}`);
+		}
+		// find project by id
+		const project = await this.projectRepository.findOne({
+			where: { id: projectId },
+		});
+		if (!project) {
+			throw new NotFoundException(
+				`No se encontró el recurso con id ${projectId}`,
+			);
+		}
+
+		if (!user.projects) {
+			user.projects = [];
+		}
+
+		const isAlreadyAssigned = user.projects.some((p) => p.id === projectId);
+		if (isAlreadyAssigned) {
+			throw new BadRequestException(`El usuario ya tiene el proyecto asignado`);
+		}
+		user.projects.push(project);
+		return await this.userRepository.save(user);
+	}
+
+	async removeProjectFromUser(userId: number, projectId: number) {
+		// find user by id
+		const user = await this.userRepository.findOne({
+			where: { id: userId },
+			relations: ["projects"],
+		});
+		if (!user) {
+			throw new NotFoundException(`No se encontró el recurso con id ${userId}`);
+		}
+		// find project by id
+		const project = await this.projectRepository.findOne({
+			where: { id: projectId },
+		});
+		if (!project) {
+			throw new NotFoundException(
+				`No se encontró el recurso con id ${projectId}`,
+			);
+		}
+		user.projects = user.projects.filter((p) => p.id !== projectId);
 		return await this.userRepository.save(user);
 	}
 }

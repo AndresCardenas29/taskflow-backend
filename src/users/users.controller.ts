@@ -17,6 +17,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthGuard } from "src/auth/auth.guard";
 import { JwtData } from "src/auth/auth.service";
 import { Task } from "src/tasks/entities/task.entity";
+import { Project } from "src/projects/entities/project.entity";
 
 // tipado del header de la respuesta
 interface ResponseHeader {
@@ -26,6 +27,12 @@ interface ResponseHeader {
 type responseTask = {
 	message: string;
 	data: Task | Task[] | null;
+	error: string;
+};
+
+type responseProject = {
+	message: string;
+	data: Project | Project[] | null;
 	error: string;
 };
 
@@ -151,6 +158,27 @@ export class UsersController {
 		};
 	}
 
+	// obtener tareas asignadas al usuario
+	@UseGuards(AuthGuard)
+	@Get("projects")
+	async getProjects(@Request() req: ResponseHeader): Promise<responseProject> {
+		if (!req.user) {
+			throw new UnauthorizedException("Unauthorized to access this resource");
+		}
+
+		const project = await this.usersService.getProjects(req.user?.sub);
+		if (!project) {
+			throw new NotFoundException(
+				`No se encontró el recurso con id ${req.user?.sub}`,
+			);
+		}
+		return {
+			message: "Proyectos asignados al usuario",
+			data: project,
+			error: "",
+		};
+	}
+
 	@UseGuards(AuthGuard)
 	@Get(":email")
 	async findOne(@Param("email") email: string, @Request() req: ResponseHeader) {
@@ -179,6 +207,37 @@ export class UsersController {
 		const user = await this.usersService.removeTaskFromUser(
 			req.user?.sub,
 			task.id,
+		);
+
+		return user;
+	}
+
+	// Projects
+
+	@UseGuards(AuthGuard)
+	@Post("add-project")
+	async addProject(@Body() project: Project, @Request() req: ResponseHeader) {
+		if (!req.user) throw new UnauthorizedException();
+
+		const user = await this.usersService.addProjectToUser(
+			req.user?.sub,
+			project.id,
+		);
+
+		return user;
+	}
+
+	@UseGuards(AuthGuard)
+	@Post("remove-project")
+	async removeProject(
+		@Body() project: Project,
+		@Request() req: ResponseHeader,
+	) {
+		if (!req.user) throw new UnauthorizedException();
+
+		const user = await this.usersService.removeProjectFromUser(
+			req.user?.sub,
+			project.id,
 		);
 
 		return user;
