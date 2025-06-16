@@ -253,7 +253,7 @@ export class UsersService {
 	async getProjects(id: number): Promise<Project[] | null> {
 		const user = await this.userRepository.findOne({
 			where: { id },
-			relations: ["projects"],
+			relations: ["projects", "projects.assigned_users"],
 		});
 		if (!user) {
 			throw new NotFoundException(`No se encontró el recurso con id ${id}`);
