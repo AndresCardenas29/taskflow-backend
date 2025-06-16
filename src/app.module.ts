@@ -14,6 +14,7 @@ import { CommentsModule } from "./comments/comments.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
+import { InitializationService } from "./initialization.service";
 
 @Module({
 	imports: [
@@ -23,6 +24,7 @@ import { AuthModule } from "./auth/auth.module";
 			entities: [Task, User, Project, Comment, Notification],
 			synchronize: true,
 		}),
+		TypeOrmModule.forFeature([User]),
 		ConfigModule.forRoot({
 			isGlobal: true,
 			envFilePath: [
@@ -40,6 +42,7 @@ import { AuthModule } from "./auth/auth.module";
 		AuthModule,
 	],
 	controllers: [AppController],
-	providers: [AppService],
+	providers: [AppService, InitializationService],
+	exports: [InitializationService],
 })
 export class AppModule {}
